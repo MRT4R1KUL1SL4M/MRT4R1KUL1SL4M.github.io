@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     gsap.to(stats, {
         duration: 2,
-        exp: 8,
+        exp: 3,
         projects: 100,
         runningResearch: 1,
         completedResearch: 0,
