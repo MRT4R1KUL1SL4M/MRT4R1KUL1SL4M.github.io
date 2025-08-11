@@ -69,13 +69,52 @@ window.addEventListener('resize', () => {
 
 // GSAP SCROLL ANIMATIONS
 document.addEventListener('DOMContentLoaded', () => {
-    gsap.from(".hero-content > *", { opacity: 0, y: 30, duration: 1.5, stagger: 0.2, delay: 0.5 });
+    // HERO SECTION ANIMATIONS
+    const subtitle = document.getElementById('animated-subtitle');
+    const originalText = subtitle.textContent;
+    subtitle.innerHTML = originalText.split('').map(char => `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+
+    gsap.from(".hero-title", { opacity: 0, y: 30, duration: 1, delay: 0.5 });
+    gsap.to(".hero-subtitle .char", {
+        opacity: 1,
+        y: 0,
+        stagger: 0.05,
+        duration: 0.5,
+        delay: 1
+    });
+    gsap.from(".hero-intro, .resume-button", { opacity: 0, y: 30, duration: 1, stagger: 0.2, delay: 1.5 });
+    
+    // Animated stats
+    const stats = {
+        exp: 0,
+        projects: 0,
+        runningResearch: 0,
+        completedResearch: 0
+    };
+
+    gsap.to(stats, {
+        duration: 2,
+        exp: 8,
+        projects: 100,
+        runningResearch: 1,
+        completedResearch: 0,
+        ease: "power2.out",
+        onUpdate: () => {
+            document.getElementById('exp-stat').textContent = Math.round(stats.exp) + '+';
+            document.getElementById('projects-stat').textContent = Math.round(stats.projects) + '+';
+            document.getElementById('running-research-stat').textContent = Math.round(stats.runningResearch);
+            document.getElementById('completed-research-stat').textContent = Math.round(stats.completedResearch);
+        },
+        delay: 2
+    });
+
+    gsap.from(".hero-stats .stat-item", { opacity: 0, y: 30, stagger: 0.2, duration: 1, delay: 2 });
     
     const sections = document.querySelectorAll(".section");
-    const navIcons = document.querySelectorAll('.right-nav a');
+    const navIcons = document.querySelectorAll('.right-nav a.nav-icon');
 
+    // Section content fade-in animation
     sections.forEach(section => {
-        // Section content fade-in
         gsap.from(section.querySelector('.container'), {
             scrollTrigger: {
                 trigger: section,
@@ -87,22 +126,24 @@ document.addEventListener('DOMContentLoaded', () => {
             y: 50,
             duration: 1,
         });
+    });
+    
+    // Active nav icon switching
+    window.addEventListener('scroll', () => {
+        let current = '';
 
-        // Active nav icon switching
-        ScrollTrigger.create({
-            trigger: section,
-            start: 'top center',
-            end: 'bottom center',
-            onToggle: self => {
-                if (self.isActive) {
-                    const currentId = '#' + section.id;
-                    navIcons.forEach(icon => {
-                        icon.classList.remove('active');
-                        if (icon.getAttribute('href') === currentId) {
-                            icon.classList.add('active');
-                        }
-                    });
-                }
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= sectionTop - sectionHeight / 3) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navIcons.forEach(icon => {
+            icon.classList.remove('active');
+            if (icon.getAttribute('href').substring(1) === current) {
+                icon.classList.add('active');
             }
         });
     });
