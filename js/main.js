@@ -37,6 +37,8 @@ scene.add(particleSystem);
 const clock = new THREE.Clock();
 function animate() {
     const elapsedTime = clock.getElapsedTime();
+
+    // Slow rotation for the particles, no mouse interaction
     particleSystem.rotation.y = elapsedTime * 0.1;
     particleSystem.rotation.x = elapsedTime * 0.05;
 
