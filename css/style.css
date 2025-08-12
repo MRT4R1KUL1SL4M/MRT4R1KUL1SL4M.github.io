@@ -264,3 +264,30 @@ body {
         min-width: 180px;
     }
 }
+
+@media (max-width: 768px) {
+
+    .section {
+        padding: 4rem 0;
+    }
+
+    .section-title {
+        margin-bottom: 2.5rem;
+    }
+
+    .hero-stats {
+        margin-top: 2.5rem;
+        gap: 1rem;
+    }
+
+    .hero-intro {
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-content {
+        padding: 1rem;
+    }
+    .project-card {
+        padding: 1.5rem;
+    }
+}
