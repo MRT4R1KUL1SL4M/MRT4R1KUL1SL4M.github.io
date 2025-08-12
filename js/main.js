@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// SCENE SETUP
+// --- THREE.js Scene Setup ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -10,16 +10,21 @@ renderer.setPixelRatio(window.devicePixelRatio);
 container.appendChild(renderer.domElement);
 camera.position.z = 5;
 
-// PARTICLES
+// --- Particles ---
 const particlesGeometry = new THREE.BufferGeometry();
 const count = 5000;
 const positions = new Float32Array(count * 3);
-for (let i = 0; i < count * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 10;
+
+for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    positions[i3] = (Math.random() - 0.5) * 20; 
+    positions[i3 + 1] = (Math.random() - 0.5) * 12;
+    positions[i3 + 2] = (Math.random() - 0.5) * 10;
 }
+
 particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 const particlesMaterial = new THREE.PointsMaterial({
-    size: 0.02,
+    size: 0.025,
     color: 0x00BFFF,
     blending: THREE.AdditiveBlending,
     transparent: true,
@@ -28,92 +33,68 @@ const particlesMaterial = new THREE.PointsMaterial({
 const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
 scene.add(particleSystem);
 
-// MOUSE INTERACTION
-const mouse = new THREE.Vector2();
-window.addEventListener('mousemove', (event) => {
-    let mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-         mouse.x = (event.clientX - mainContent.getBoundingClientRect().left) / mainContent.offsetWidth * 2 - 1;
-         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    }
-});
 
-// ANIMATION LOOP
+// --- Animation Loop ---
 const clock = new THREE.Clock();
 function animate() {
     const elapsedTime = clock.getElapsedTime();
-    particleSystem.rotation.y = elapsedTime * 0.1;
-    
-    let targetX = (window.scrollY > 0) ? 0 : mouse.x * 0.5;
-    let targetY = (window.scrollY > 0) ? 0 : -mouse.y * 0.5;
 
-    gsap.to(camera.position, {
-        x: targetX,
-        y: targetY,
-        duration: 2,
-        ease: 'power2.out'
-    });
-    
-    camera.lookAt(scene.position);
+    // Add a slow rotation to the particle system
+    particleSystem.rotation.y = elapsedTime * 0.1;
+    particleSystem.rotation.x = elapsedTime * 0.05;
+
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
 animate();
 
-// RESIZE HANDLER
+// --- Resize Handler ---
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// GSAP SCROLL ANIMATIONS
+
+// --- All Entrance and Scroll Animations ---
 document.addEventListener('DOMContentLoaded', () => {
-    // HERO SECTION ANIMATIONS
+    // Sidebar entrance animations
+    gsap.from(".left-sidebar", { duration: 1.5, x: -350, ease: "power2.out", delay: 0.5 });
+    gsap.from(".right-nav", { duration: 1.5, x: 100, ease: "power2.out", delay: 0.7 });
+
     const subtitle = document.getElementById('animated-subtitle');
     const originalText = subtitle.textContent;
-    subtitle.innerHTML = originalText.split('').map(char => `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+    if (subtitle) {
+        subtitle.innerHTML = originalText.split('').map(char => `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+    }
 
-    gsap.from(".hero-title", { opacity: 0, y: 30, duration: 1, delay: 0.5 });
-    gsap.to(".hero-subtitle .char", {
-        opacity: 1,
-        y: 0,
-        stagger: 0.05,
-        duration: 0.5,
-        delay: 1
-    });
-    gsap.from(".hero-intro, .resume-button", { opacity: 0, y: 30, duration: 1, stagger: 0.2, delay: 1.5 });
+    const stats = { exp: 0, projects: 0, running: 0, completed: 0 };
     
-    // Animated stats
-    const stats = {
-        exp: 0,
-        projects: 0,
-        runningResearch: 0,
-        completedResearch: 0
-    };
+    const tl = gsap.timeline({delay: 0.5});
 
-    gsap.to(stats, {
-        duration: 2,
-        exp: 3,
-        projects: 100,
-        runningResearch: 1,
-        completedResearch: 0,
-        ease: "power2.out",
-        onUpdate: () => {
-            document.getElementById('exp-stat').textContent = Math.round(stats.exp) + '+';
-            document.getElementById('projects-stat').textContent = Math.round(stats.projects) + '+';
-            document.getElementById('running-research-stat').textContent = Math.round(stats.runningResearch);
-            document.getElementById('completed-research-stat').textContent = Math.round(stats.completedResearch);
-        },
-        delay: 2
-    });
+    tl.from(".hero-title", { opacity: 0, y: 30, duration: 1})
+      .to(".hero-subtitle .char", { opacity: 1, y: 0, stagger: 0.05, duration: 0.5 }, "-=0.5")
+      .from(".hero-intro, .resume-button", { opacity: 0, y: 30, duration: 1, stagger: 0.2 }, "-=0.5")
+      .from(".stat-item", { opacity: 0, y: 50, stagger: 0.2, duration: 1, ease: 'power3.out' }, "-=0.8")
+      .to(stats, { 
+          duration: 2,
+          exp: 8,
+          projects: 100,
+          running: 1,
+          completed: 0,
+          ease: "power2.out",
+          onUpdate: () => {
+              document.getElementById('exp-stat').textContent = `${Math.round(stats.exp)}+`;
+              document.getElementById('projects-stat').textContent = `${Math.round(stats.projects)}+`;
+              document.getElementById('running-research-stat').textContent = Math.round(stats.running);
+              document.getElementById('completed-research-stat').textContent = Math.round(stats.completed);
+          }
+      }, "-=1.2");
 
-    gsap.from(".hero-stats .stat-item", { opacity: 0, y: 30, stagger: 0.2, duration: 1, delay: 2 });
-    
     const sections = document.querySelectorAll(".section");
     const navIcons = document.querySelectorAll('.right-nav a.nav-icon');
 
-    // Section content fade-in animation
+    // Section content fade-in on scroll
     sections.forEach(section => {
         gsap.from(section.querySelector('.container'), {
             scrollTrigger: {
@@ -128,10 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Active nav icon switching
+    // Active nav icon on scroll
     window.addEventListener('scroll', () => {
         let current = '';
-
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
             const sectionHeight = section.clientHeight;
