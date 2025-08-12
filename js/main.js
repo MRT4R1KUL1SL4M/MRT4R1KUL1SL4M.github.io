@@ -10,18 +10,21 @@ renderer.setPixelRatio(window.devicePixelRatio);
 container.appendChild(renderer.domElement);
 camera.position.z = 5;
 
-// --- Particles ---
+// --- Interactive Particles ---
 const particlesGeometry = new THREE.BufferGeometry();
 const count = 5000;
 const positions = new Float32Array(count * 3);
+const originalPositions = new Float32Array(count * 3); 
 
 for (let i = 0; i < count; i++) {
     const i3 = i * 3;
     positions[i3] = (Math.random() - 0.5) * 20; 
     positions[i3 + 1] = (Math.random() - 0.5) * 12;
     positions[i3 + 2] = (Math.random() - 0.5) * 10;
+    originalPositions[i3] = positions[i3];
+    originalPositions[i3 + 1] = positions[i3 + 1];
+    originalPositions[i3 + 2] = positions[i3 + 2];
 }
-
 particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 const particlesMaterial = new THREE.PointsMaterial({
     size: 0.025,
@@ -33,16 +36,46 @@ const particlesMaterial = new THREE.PointsMaterial({
 const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
 scene.add(particleSystem);
 
+// --- Mouse Interaction ---
+const mouse = new THREE.Vector2(-100, -100);
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
 
 // --- Animation Loop ---
-const clock = new THREE.Clock();
 function animate() {
-    const elapsedTime = clock.getElapsedTime();
-
-    // Add a slow rotation to the particle system
-    particleSystem.rotation.y = elapsedTime * 0.1;
-    particleSystem.rotation.x = elapsedTime * 0.05;
-
+    // Animate particles based on mouse position
+    const positionsArray = particlesGeometry.attributes.position.array;
+    for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        const x = originalPositions[i3];
+        const y = originalPositions[i3 + 1];
+        
+        const mouseDistance = Math.sqrt(Math.pow(x - (mouse.x * 10), 2) + Math.pow(y - (mouse.y * 6), 2));
+        const maxDistance = 2;
+        
+        if (mouseDistance < maxDistance) {
+            const force = (maxDistance - mouseDistance) / maxDistance;
+            positionsArray[i3] += (originalPositions[i3] - positionsArray[i3]) * 0.1 - (x - mouse.x * 10) * force * 0.05;
+            positionsArray[i3 + 1] += (originalPositions[i3 + 1] - positionsArray[i3 + 1]) * 0.1 - (y - mouse.y * 6) * force * 0.05;
+            positionsArray[i3 + 2] += (originalPositions[i3+2] - positionsArray[i3+2]) * 0.1 + force * 2.0;
+        } else {
+            positionsArray[i3] += (originalPositions[i3] - positionsArray[i3]) * 0.03;
+            positionsArray[i3 + 1] += (originalPositions[i3 + 1] - positionsArray[i3 + 1]) * 0.03;
+            positionsArray[i3 + 2] += (originalPositions[i3 + 2] - positionsArray[i3 + 2]) * 0.03;
+        }
+    }
+    particlesGeometry.attributes.position.needsUpdate = true;
+    
+    gsap.to(camera.position, {
+        x: mouse.x * 0.5,
+        y: -mouse.y * 0.5,
+        duration: 2,
+        ease: 'power2.out'
+    });
+    
+    camera.lookAt(scene.position);
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
@@ -58,7 +91,6 @@ window.addEventListener('resize', () => {
 
 // --- All Entrance and Scroll Animations ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Sidebar entrance animations
     gsap.from(".left-sidebar", { duration: 1.5, x: -350, ease: "power2.out", delay: 0.5 });
     gsap.from(".right-nav", { duration: 1.5, x: 100, ease: "power2.out", delay: 0.7 });
 
@@ -75,7 +107,15 @@ document.addEventListener('DOMContentLoaded', () => {
     tl.from(".hero-title", { opacity: 0, y: 30, duration: 1})
       .to(".hero-subtitle .char", { opacity: 1, y: 0, stagger: 0.05, duration: 0.5 }, "-=0.5")
       .from(".hero-intro, .resume-button", { opacity: 0, y: 30, duration: 1, stagger: 0.2 }, "-=0.5")
-      .from(".stat-item", { opacity: 0, y: 50, stagger: 0.2, duration: 1, ease: 'power3.out' }, "-=0.8")
+      // --- এই লাইনে পরিবর্তনটি করা হয়েছে ---
+      .from(".stat-item", { 
+          opacity: 0, 
+          y: 50, 
+          stagger: 0.2, 
+          duration: 1, 
+          ease: 'power3.out', 
+          clearProps: "transform" // <-- এই কোডটি যোগ করা হয়েছে GSAP এর স্টাইল মুছে ফেলার জন্য
+      }, "-=0.8")
       .to(stats, { 
           duration: 2,
           exp: 8,
@@ -94,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sections = document.querySelectorAll(".section");
     const navIcons = document.querySelectorAll('.right-nav a.nav-icon');
 
-    // Section content fade-in on scroll
     sections.forEach(section => {
         gsap.from(section.querySelector('.container'), {
             scrollTrigger: {
@@ -109,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Active nav icon on scroll
     window.addEventListener('scroll', () => {
         let current = '';
         sections.forEach(section => {

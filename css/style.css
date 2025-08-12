@@ -140,11 +140,9 @@ body {
 .about-container p:not(:last-child) { margin-bottom: 1rem; }
 
 /* --- Universal Card Hover Effect --- */
-/* .stat-item এখানে যোগ করা হয়েছে */
 .stat-item, .timeline-content, .research-item, .project-card, .cert-item {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-/* .stat-item:hover এখানে যোগ করা হয়েছে */
 .stat-item:hover, .timeline-content:hover, .research-item:hover, .project-card:hover, .cert-item:hover {
     transform: translateY(-10px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
